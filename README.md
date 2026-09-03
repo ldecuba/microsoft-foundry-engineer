@@ -46,6 +46,16 @@ npm run validate:eu-ai-act
 - `foundry_generate_go_live_report`
 - `foundry_doctor`
 
+## Copilot Studio
+
+Copilot Studio can use this MCP after the server is hosted behind a reachable HTTPS Streamable MCP endpoint.
+
+See:
+
+- `copilot-studio/setup-guide.md`
+- `copilot-studio/foundry-engineer-agent.md`
+- `copilot-studio/mcp-action-foundry-engineer.mcs.yml`
+
 ## EU AI Act Checks
 
 The EU AI Act tool checks:
@@ -59,4 +69,3 @@ The EU AI Act tool checks:
 - which current obligation dates apply
 
 This MCP does not give legal advice. It gives engineering evidence gaps and review prompts so legal, compliance, and product owners have something concrete to inspect.
-

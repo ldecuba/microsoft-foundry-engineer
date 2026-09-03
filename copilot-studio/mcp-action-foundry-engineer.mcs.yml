@@ -1,0 +1,13 @@
+# Name: Microsoft Foundry Engineer MCP
+# Description: Engineering workbench for Microsoft Foundry deployment, evaluation, RBAC, go-live, and EU AI Act readiness checks.
+kind: TaskDialog
+modelDisplayName: Microsoft Foundry Engineer MCP
+modelDescription: Use this MCP server when the user asks about Microsoft Foundry readiness, deployment planning, model or agent evaluation, RBAC, go-live evidence, or EU AI Act readiness checks.
+action:
+  kind: InvokeExternalAgentTaskAction
+  connectionReference: <connection-reference-logical-name>
+  connectionProperties:
+    mode: Invoker
+  operationDetails:
+    kind: ModelContextProtocolMetadata
+    operationId: <mcp_OperationId>
