@@ -1,0 +1,36 @@
+{
+  "name": "agent-name",
+  "description": "What this Foundry agent does.",
+  "kind": "foundry-agent-manifest",
+  "modelDeployment": "deployment-name",
+  "tools": [
+    {
+      "name": "tool-name",
+      "auth": "managed identity",
+      "allowedActions": [],
+      "auditRequired": true
+    }
+  ],
+  "environments": [
+    {
+      "name": "dev",
+      "approvalRequired": false,
+      "evalRequired": false
+    },
+    {
+      "name": "test",
+      "approvalRequired": false,
+      "evalRequired": true
+    },
+    {
+      "name": "prod",
+      "approvalRequired": true,
+      "evalRequired": true
+    }
+  ],
+  "safety": {
+    "userDisclosure": "Tell users they are interacting with AI where applicable.",
+    "contentFiltering": "Use Foundry content safety and record filter outcomes.",
+    "blockedUses": "Screen against prohibited practices and organization policy."
+  }
+}

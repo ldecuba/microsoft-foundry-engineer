@@ -1,0 +1,27 @@
+{
+  "name": "microsoft-foundry-engineer-mcp",
+  "version": "0.1.0",
+  "description": "MCP workbench for Microsoft Foundry engineering, operations, and EU AI Act readiness checks.",
+  "type": "module",
+  "bin": {
+    "microsoft-foundry-engineer-mcp": "./dist/server.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "doctor": "node scripts/foundry-doctor.mjs",
+    "validate:eu-ai-act": "node scripts/eu-ai-act-check.mjs",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.4",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.17.2",
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
