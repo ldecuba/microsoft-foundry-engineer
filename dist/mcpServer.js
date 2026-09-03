@@ -7,6 +7,7 @@ import { checkEnvironment } from "./tools/environment.js";
 import { checkRbac } from "./tools/rbac.js";
 import { checkEuAiAct } from "./tools/euAiAct.js";
 import { buildGoLiveReport, runDoctor } from "./tools/reports.js";
+import { getAzureAccount, getContainerAppStatus, getFoundryResource, listFoundryResources, listModelDeployments, listRoleAssignments, runLiveDoctor } from "./tools/liveAzure.js";
 function jsonText(value) {
     return {
         content: [
@@ -83,5 +84,30 @@ export function createFoundryEngineerMcpServer() {
         useCase: z.string().default("Unspecified Foundry workload"),
         euUsersOrMarket: z.boolean().default(true)
     }, async (args) => jsonText(runDoctor(args)));
+    server.tool("foundry_live_account", "Read the active Azure tenant, subscription, and user from Azure CLI.", {}, async () => jsonText(await getAzureAccount()));
+    server.tool("foundry_live_list_resources", "List Azure AI Services and Foundry account resources visible to the active Azure CLI login.", {
+        resourceGroup: z.string().optional()
+    }, async (args) => jsonText(await listFoundryResources(args)));
+    server.tool("foundry_live_get_resource", "Get one Azure AI Services or Foundry account resource, including network posture.", {
+        name: z.string(),
+        resourceGroup: z.string()
+    }, async (args) => jsonText(await getFoundryResource(args)));
+    server.tool("foundry_live_list_model_deployments", "List model deployments on an Azure AI Services or Foundry account.", {
+        accountName: z.string(),
+        resourceGroup: z.string()
+    }, async (args) => jsonText(await listModelDeployments(args)));
+    server.tool("foundry_live_list_role_assignments", "List Azure RBAC role assignments for a scope or assignee.", {
+        scope: z.string().optional(),
+        assignee: z.string().optional()
+    }, async (args) => jsonText(await listRoleAssignments(args)));
+    server.tool("foundry_live_get_container_app_status", "Get Azure Container Apps status for the hosted MCP or another app.", {
+        name: z.string(),
+        resourceGroup: z.string()
+    }, async (args) => jsonText(await getContainerAppStatus(args)));
+    server.tool("foundry_live_doctor", "Run a read-only live Azure CLI readiness pass for Foundry resources and the hosted MCP.", {
+        resourceGroup: z.string().optional(),
+        accountName: z.string().optional(),
+        containerAppName: z.string().optional()
+    }, async (args) => jsonText(await runLiveDoctor(args)));
     return server;
 }

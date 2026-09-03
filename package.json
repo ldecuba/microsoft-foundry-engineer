@@ -12,6 +12,7 @@
     "start:stdio": "node dist/server.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "doctor": "node scripts/foundry-doctor.mjs",
+    "doctor:live": "node scripts/live-doctor.mjs",
     "validate:eu-ai-act": "node scripts/eu-ai-act-check.mjs",
     "smoke": "node scripts/smoke.mjs"
   },

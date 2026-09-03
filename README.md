@@ -51,6 +51,15 @@ npm run validate:eu-ai-act
 - `foundry_check_eu_ai_act`
 - `foundry_generate_go_live_report`
 - `foundry_doctor`
+- `foundry_live_account`
+- `foundry_live_list_resources`
+- `foundry_live_get_resource`
+- `foundry_live_list_model_deployments`
+- `foundry_live_list_role_assignments`
+- `foundry_live_get_container_app_status`
+- `foundry_live_doctor`
+
+The `foundry_live_*` tools are read-only and use the Azure CLI login available to the machine running the MCP server.
 
 ## Copilot Studio
 
