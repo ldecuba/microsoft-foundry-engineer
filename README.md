@@ -25,7 +25,13 @@ npm run build
 ## Run
 
 ```bash
-npx microsoft-foundry-engineer-mcp
+npm run start:stdio
+```
+
+Hosted HTTP mode for Copilot Studio:
+
+```bash
+npm start
 ```
 
 For local checks without an MCP client:
@@ -52,6 +58,7 @@ Copilot Studio can use this MCP after the server is hosted behind a reachable HT
 
 See:
 
+- `docs/hosting-azure-container-apps.md`
 - `copilot-studio/setup-guide.md`
 - `copilot-studio/foundry-engineer-agent.md`
 - `copilot-studio/mcp-action-foundry-engineer.mcs.yml`

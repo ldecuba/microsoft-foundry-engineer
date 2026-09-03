@@ -8,6 +8,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "start": "node dist/httpServer.js",
+    "start:stdio": "node dist/server.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "doctor": "node scripts/foundry-doctor.mjs",
     "validate:eu-ai-act": "node scripts/eu-ai-act-check.mjs",
@@ -15,9 +17,11 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.4",
+    "express": "^5.1.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^22.17.2",
     "typescript": "^5.9.2"
   },
