@@ -2,3 +2,5 @@ node_modules/
 npm-debug.log*
 .env
 .env.*
+mcp-api-key.local.txt
+infra/*.json

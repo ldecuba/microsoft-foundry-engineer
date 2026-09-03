@@ -12,6 +12,8 @@ Health check:
 /health
 ```
 
+The hosted server binds to `0.0.0.0` for Azure Container Apps. The `/mcp` endpoint should be protected with `MCP_API_KEY`.
+
 ## Local Run
 
 ```bash
@@ -39,8 +41,10 @@ Build and push the image to your container registry first. Then deploy:
 
 ```powershell
 .\scripts\deploy-container-app.ps1 `
-  -ResourceGroup rg-foundry-engineer-mcp `
+  -ResourceGroup rg-aifoundry-dev `
   -Image "<your-registry>.azurecr.io/microsoft-foundry-engineer-mcp:0.1.0" `
+  -RegistryServer "<your-registry>.azurecr.io" `
+  -AcrName "<your-registry>" `
   -McpApiKey "<long-random-api-key>" `
   -Location westeurope
 ```

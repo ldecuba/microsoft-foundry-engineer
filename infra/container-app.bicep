@@ -2,10 +2,16 @@
 param location string = resourceGroup().location
 
 @description('Container App name.')
-param appName string = 'microsoft-foundry-engineer-mcp'
+param appName string = 'foundry-engineer-mcp'
 
 @description('Container image to deploy.')
 param image string
+
+@description('Azure Container Registry login server, for example myregistry.azurecr.io.')
+param registryServer string
+
+@description('Azure Container Registry name used for AcrPull assignment.')
+param acrName string
 
 @secure()
 @description('Bearer token expected in the Authorization header. Leave empty only for isolated test environments.')
@@ -36,9 +42,34 @@ resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   }
 }
 
+resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: '${appName}-pull'
+  location: location
+}
+
+resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existing = {
+  name: acrName
+}
+
+resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(acr.id, identity.id, 'AcrPull')
+  scope: acr
+  properties: {
+    principalId: identity.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
+  }
+}
+
 resource app 'Microsoft.App/containerApps@2024-03-01' = {
   name: appName
   location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${identity.id}': {}
+    }
+  }
   properties: {
     managedEnvironmentId: environment.id
     configuration: {
@@ -52,6 +83,12 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
         {
           name: 'mcp-api-key'
           value: mcpApiKey
+        }
+      ]
+      registries: [
+        {
+          server: registryServer
+          identity: identity.id
         }
       ]
     }
@@ -82,6 +119,9 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
       ]
     }
   }
+  dependsOn: [
+    acrPullRole
+  ]
 }
 
 output url string = 'https://${app.properties.configuration.ingress.fqdn}/mcp'

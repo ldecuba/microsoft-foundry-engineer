@@ -8,7 +8,7 @@ import { createFoundryEngineerMcpServer } from "./mcpServer.js";
 const apiKey = process.env.MCP_API_KEY;
 const port = Number(process.env.PORT ?? 3000);
 const transports = new Map<string, StreamableHTTPServerTransport>();
-const app = createMcpExpressApp();
+const app = createMcpExpressApp({ host: "0.0.0.0" });
 
 function isAuthorized(req: { headers: Record<string, string | string[] | undefined> }) {
   if (!apiKey) {
