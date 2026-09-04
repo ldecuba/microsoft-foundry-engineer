@@ -14,6 +14,7 @@ const requiredFiles = [
   "Dockerfile",
   "infra/container-app.bicep",
   "docs/hosting-azure-container-apps.md",
+  "docs/live-azure-tools.md",
   "templates/eu-ai-act-evidence-pack.md",
   "templates/foundry-agent-manifest.json",
   "templates/foundry-go-live-report.md"

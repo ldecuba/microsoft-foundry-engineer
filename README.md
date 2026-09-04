@@ -57,6 +57,11 @@ npm run validate:eu-ai-act
 - `foundry_live_list_model_deployments`
 - `foundry_live_list_role_assignments`
 - `foundry_live_get_container_app_status`
+- `foundry_live_check_quota`
+- `foundry_live_check_network_posture`
+- `foundry_live_list_private_endpoints`
+- `foundry_live_list_app_insights`
+- `foundry_live_query_app_insights_traces`
 - `foundry_live_doctor`
 
 The `foundry_live_*` tools are read-only and use the Azure CLI login available to the machine running the MCP server.

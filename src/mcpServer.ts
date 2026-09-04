@@ -9,11 +9,16 @@ import { checkEuAiAct } from "./tools/euAiAct.js";
 import { buildGoLiveReport, runDoctor } from "./tools/reports.js";
 import {
   getAzureAccount,
+  checkNetworkPosture,
   getContainerAppStatus,
   getFoundryResource,
+  listAppInsightsComponents,
+  listCognitiveServicesUsage,
   listFoundryResources,
   listModelDeployments,
+  listPrivateEndpoints,
   listRoleAssignments,
+  queryAppInsightsTraces,
   runLiveDoctor
 } from "./tools/liveAzure.js";
 
@@ -190,6 +195,35 @@ export function createFoundryEngineerMcpServer() {
   );
 
   server.tool(
+    "foundry_live_check_quota",
+    "List Cognitive Services quota and usage for a region.",
+    {
+      location: z.string().default("westeurope")
+    },
+    async (args) => jsonText(await listCognitiveServicesUsage(args))
+  );
+
+  server.tool(
+    "foundry_live_check_network_posture",
+    "Inspect public network access, firewall rules, and private endpoint states for a Foundry or Azure AI Services account.",
+    {
+      accountName: z.string(),
+      resourceGroup: z.string()
+    },
+    async (args) => jsonText(await checkNetworkPosture(args))
+  );
+
+  server.tool(
+    "foundry_live_list_private_endpoints",
+    "List private endpoints in a resource group, optionally filtered to one Foundry or Azure AI Services account.",
+    {
+      resourceGroup: z.string(),
+      accountName: z.string().optional()
+    },
+    async (args) => jsonText(await listPrivateEndpoints(args))
+  );
+
+  server.tool(
     "foundry_live_get_container_app_status",
     "Get Azure Container Apps status for the hosted MCP or another app.",
     {
@@ -200,12 +234,35 @@ export function createFoundryEngineerMcpServer() {
   );
 
   server.tool(
+    "foundry_live_list_app_insights",
+    "List Application Insights components visible to the active Azure CLI login.",
+    {
+      resourceGroup: z.string().optional()
+    },
+    async (args) => jsonText(await listAppInsightsComponents(args))
+  );
+
+  server.tool(
+    "foundry_live_query_app_insights_traces",
+    "Query recent Application Insights traces, requests, and exceptions.",
+    {
+      app: z.string(),
+      resourceGroup: z.string().optional(),
+      offset: z.string().default("1h"),
+      query: z.string().optional()
+    },
+    async (args) => jsonText(await queryAppInsightsTraces(args))
+  );
+
+  server.tool(
     "foundry_live_doctor",
     "Run a read-only live Azure CLI readiness pass for Foundry resources and the hosted MCP.",
     {
       resourceGroup: z.string().optional(),
       accountName: z.string().optional(),
-      containerAppName: z.string().optional()
+      containerAppName: z.string().optional(),
+      location: z.string().optional(),
+      appInsightsApp: z.string().optional()
     },
     async (args) => jsonText(await runLiveDoctor(args))
   );
