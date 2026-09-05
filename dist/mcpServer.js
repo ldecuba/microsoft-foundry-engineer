@@ -144,7 +144,7 @@ export function createFoundryEngineerMcpServer() {
         location: z.string().optional(),
         appInsightsApp: z.string().optional()
     }, async (args) => jsonText(await runLiveDoctor(args)));
-    server.tool("foundry_live_generate_release_evidence_pack", "Create a showcase-ready release evidence pack from live Foundry checks, hosted MCP status, traces, smoke prompt, RBAC, networking, quota, and EU AI Act readiness.", {
+    server.tool("foundry_live_generate_release_evidence_pack", "Create a release evidence pack from live Foundry checks, hosted MCP status, traces, smoke prompt, RBAC, networking, quota, and EU AI Act readiness.", {
         systemName: z.string().default("Microsoft Foundry Engineer MCP"),
         useCase: z.string().default("Engineering assistant for Microsoft Foundry projects and deployments."),
         resourceGroup: z.string(),

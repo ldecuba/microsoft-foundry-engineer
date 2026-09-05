@@ -290,7 +290,7 @@ export function createFoundryEngineerMcpServer() {
 
   server.tool(
     "foundry_live_generate_release_evidence_pack",
-    "Create a showcase-ready release evidence pack from live Foundry checks, hosted MCP status, traces, smoke prompt, RBAC, networking, quota, and EU AI Act readiness.",
+    "Create a release evidence pack from live Foundry checks, hosted MCP status, traces, smoke prompt, RBAC, networking, quota, and EU AI Act readiness.",
     {
       systemName: z.string().default("Microsoft Foundry Engineer MCP"),
       useCase: z.string().default("Engineering assistant for Microsoft Foundry projects and deployments."),
