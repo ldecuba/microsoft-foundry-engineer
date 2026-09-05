@@ -7,7 +7,7 @@ import { checkEnvironment } from "./tools/environment.js";
 import { checkRbac } from "./tools/rbac.js";
 import { checkEuAiAct } from "./tools/euAiAct.js";
 import { buildGoLiveReport, runDoctor } from "./tools/reports.js";
-import { getAzureAccount, checkNetworkPosture, getContainerAppStatus, getFoundryResource, listAppInsightsComponents, listCognitiveServicesUsage, listFoundryResources, listModelDeployments, listPrivateEndpoints, listRoleAssignments, queryAppInsightsTraces, runSmokePrompt, runLiveDoctor } from "./tools/liveAzure.js";
+import { getAzureAccount, checkNetworkPosture, getContainerAppStatus, getFoundryResource, listAppInsightsComponents, listCognitiveServicesUsage, listFoundryResources, listModelDeployments, listPrivateEndpoints, listRoleAssignments, queryAppInsightsTraces, runSmokePrompt, runLiveDoctor, generateReleaseEvidencePack } from "./tools/liveAzure.js";
 function jsonText(value) {
     return {
         content: [
@@ -144,5 +144,25 @@ export function createFoundryEngineerMcpServer() {
         location: z.string().optional(),
         appInsightsApp: z.string().optional()
     }, async (args) => jsonText(await runLiveDoctor(args)));
+    server.tool("foundry_live_generate_release_evidence_pack", "Create a showcase-ready release evidence pack from live Foundry checks, hosted MCP status, traces, smoke prompt, RBAC, networking, quota, and EU AI Act readiness.", {
+        systemName: z.string().default("Microsoft Foundry Engineer MCP"),
+        useCase: z.string().default("Engineering assistant for Microsoft Foundry projects and deployments."),
+        resourceGroup: z.string(),
+        accountName: z.string(),
+        location: z.string().default("westeurope"),
+        containerAppName: z.string().optional(),
+        appInsightsApp: z.string().optional(),
+        deploymentName: z.string().optional(),
+        includeSmokePrompt: z.boolean().default(false),
+        smokePrompt: z.string().optional(),
+        euUsersOrMarket: z.boolean().default(true),
+        interactsWithPeople: z.boolean().default(true),
+        generatesOrAltersContent: z.boolean().default(true),
+        biometricUse: z.boolean().default(false),
+        employmentEducationCreditHealthLawMigrationJusticeUse: z.boolean().default(false),
+        manipulativeOrExploitativeRisk: z.boolean().default(false),
+        providerOfGpaiModel: z.boolean().default(false),
+        usesThirdPartyGpaiModel: z.boolean().default(true)
+    }, async (args) => jsonText(await generateReleaseEvidencePack(args)));
     return server;
 }

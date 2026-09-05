@@ -24,6 +24,7 @@ The first live slice is read-only. It uses the Azure CLI context of the machine 
 - `foundry_live_query_app_insights_traces`
 - `foundry_live_run_smoke_prompt`
 - `foundry_live_doctor`
+- `foundry_live_generate_release_evidence_pack`
 
 ## Example Prompts
 
@@ -67,6 +68,10 @@ Query recent App Insights traces for app <app-insights-name> in rg-aifoundry-dev
 Run a smoke prompt against deployment gpt-4o on account ais-aifoundry-dev in rg-aifoundry-dev.
 ```
 
+```text
+Generate a release evidence pack for Microsoft Foundry Engineer MCP using rg-aifoundry-dev, ais-aifoundry-dev, westeurope, container app foundry-engineer-mcp, deployment gpt-4o, and include the smoke prompt.
+```
+
 ## Local Script Test
 
 After building, you can test the same read-only path outside an MCP client:
@@ -79,6 +84,12 @@ Run one live model smoke prompt:
 
 ```bash
 npm run smoke:prompt -- rg-aifoundry-dev ais-aifoundry-dev gpt-4o
+```
+
+Generate a Markdown evidence pack:
+
+```bash
+npm run evidence:release -- rg-aifoundry-dev ais-aifoundry-dev gpt-4o evidence-pack.md
 ```
 
 Optional arguments:

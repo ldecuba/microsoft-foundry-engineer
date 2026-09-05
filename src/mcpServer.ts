@@ -20,7 +20,8 @@ import {
   listRoleAssignments,
   queryAppInsightsTraces,
   runSmokePrompt,
-  runLiveDoctor
+  runLiveDoctor,
+  generateReleaseEvidencePack
 } from "./tools/liveAzure.js";
 
 function jsonText(value: unknown) {
@@ -285,6 +286,32 @@ export function createFoundryEngineerMcpServer() {
       appInsightsApp: z.string().optional()
     },
     async (args) => jsonText(await runLiveDoctor(args))
+  );
+
+  server.tool(
+    "foundry_live_generate_release_evidence_pack",
+    "Create a showcase-ready release evidence pack from live Foundry checks, hosted MCP status, traces, smoke prompt, RBAC, networking, quota, and EU AI Act readiness.",
+    {
+      systemName: z.string().default("Microsoft Foundry Engineer MCP"),
+      useCase: z.string().default("Engineering assistant for Microsoft Foundry projects and deployments."),
+      resourceGroup: z.string(),
+      accountName: z.string(),
+      location: z.string().default("westeurope"),
+      containerAppName: z.string().optional(),
+      appInsightsApp: z.string().optional(),
+      deploymentName: z.string().optional(),
+      includeSmokePrompt: z.boolean().default(false),
+      smokePrompt: z.string().optional(),
+      euUsersOrMarket: z.boolean().default(true),
+      interactsWithPeople: z.boolean().default(true),
+      generatesOrAltersContent: z.boolean().default(true),
+      biometricUse: z.boolean().default(false),
+      employmentEducationCreditHealthLawMigrationJusticeUse: z.boolean().default(false),
+      manipulativeOrExploitativeRisk: z.boolean().default(false),
+      providerOfGpaiModel: z.boolean().default(false),
+      usesThirdPartyGpaiModel: z.boolean().default(true)
+    },
+    async (args) => jsonText(await generateReleaseEvidencePack(args))
   );
 
   return server;

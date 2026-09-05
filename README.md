@@ -13,7 +13,7 @@ It focuses on practical engineering jobs:
 
 ## Current Build
 
-This is a foundation build. Tools return structured checklists, commands, and expected evidence. The next slice can wire selected tools to live Azure CLI, Foundry SDK, and telemetry calls.
+This build includes planning tools, EU AI Act readiness checks, local tenant-aware Azure checks, hosted Streamable HTTP support, live smoke prompts, and a release evidence pack for demos or go-live review.
 
 ## Install
 
@@ -38,6 +38,7 @@ For local checks without an MCP client:
 
 ```bash
 npm run doctor
+npm run evidence:release -- rg-aifoundry-dev ais-aifoundry-dev gpt-4o evidence-pack.md
 npm run validate:eu-ai-act
 ```
 
@@ -64,8 +65,28 @@ npm run validate:eu-ai-act
 - `foundry_live_query_app_insights_traces`
 - `foundry_live_run_smoke_prompt`
 - `foundry_live_doctor`
+- `foundry_live_generate_release_evidence_pack`
 
 The `foundry_live_*` tools are read-only and use the Azure CLI login available to the machine running the MCP server.
+
+`foundry_live_run_smoke_prompt` sends one prompt to the selected deployment. Use it only when you want to prove that a model deployment answers live.
+
+## Showcase Path
+
+For a complete demo, start with tenant proof and end with a release evidence pack:
+
+1. `foundry_live_account`
+2. `foundry_live_list_resources`
+3. `foundry_live_list_model_deployments`
+4. `foundry_live_check_quota`
+5. `foundry_live_check_network_posture`
+6. `foundry_live_run_smoke_prompt`
+7. `foundry_live_generate_release_evidence_pack`
+
+See:
+
+- `docs/showcase-guide.md`
+- `docs/vscode-mcp-setup.md`
 
 ## Copilot Studio
 
@@ -74,6 +95,7 @@ Copilot Studio can use this MCP after the server is hosted behind a reachable HT
 See:
 
 - `docs/hosting-azure-container-apps.md`
+- `docs/vscode-mcp-setup.md`
 - `copilot-studio/setup-guide.md`
 - `copilot-studio/foundry-engineer-agent.md`
 - `copilot-studio/mcp-action-foundry-engineer.mcs.yml`

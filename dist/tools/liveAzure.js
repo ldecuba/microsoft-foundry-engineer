@@ -1,4 +1,5 @@
 import { runAzJson } from "../services/azureCli.js";
+import { checkEuAiAct } from "./euAiAct.js";
 export async function getAzureAccount() {
     return runAzJson(["account", "show", "--query", "{tenantId:tenantId,subscriptionId:id,name:name,user:user.name}"]);
 }
@@ -294,5 +295,155 @@ export async function runLiveDoctor(args) {
             "Run evals against the actual deployment or agent.",
             "Confirm EU AI Act classification and evidence owner before production."
         ]
+    };
+}
+function summarizeOk(value) {
+    const result = value;
+    if (!result) {
+        return "not-run";
+    }
+    if (typeof result.ok === "boolean") {
+        return result.ok ? "ok" : "failed";
+    }
+    return result.status ?? "review";
+}
+function markdownSection(title, lines) {
+    return [`## ${title}`, "", ...lines, ""].join("\n");
+}
+function getSingleAppInsightsName(result) {
+    const data = result?.data;
+    if (Array.isArray(data) && data.length === 1) {
+        return data[0]?.name;
+    }
+    return undefined;
+}
+export async function generateReleaseEvidencePack(args) {
+    const generatedAt = new Date().toISOString();
+    const account = await getAzureAccount();
+    const foundryResource = await getFoundryResource({
+        name: args.accountName,
+        resourceGroup: args.resourceGroup
+    });
+    const modelDeployments = await listModelDeployments({
+        accountName: args.accountName,
+        resourceGroup: args.resourceGroup
+    });
+    const quota = await listCognitiveServicesUsage({ location: args.location });
+    const networkPosture = await checkNetworkPosture({
+        accountName: args.accountName,
+        resourceGroup: args.resourceGroup
+    });
+    const privateEndpoints = await listPrivateEndpoints({
+        resourceGroup: args.resourceGroup,
+        accountName: args.accountName
+    });
+    const roleAssignments = await listRoleAssignments({});
+    const containerApp = args.containerAppName
+        ? await getContainerAppStatus({
+            name: args.containerAppName,
+            resourceGroup: args.resourceGroup
+        })
+        : undefined;
+    const appInsightsComponents = await listAppInsightsComponents({
+        resourceGroup: args.resourceGroup
+    });
+    const appInsightsApp = args.appInsightsApp ?? getSingleAppInsightsName(appInsightsComponents);
+    const recentTraces = appInsightsApp
+        ? await queryAppInsightsTraces({
+            app: appInsightsApp,
+            resourceGroup: args.resourceGroup,
+            offset: "1h"
+        })
+        : undefined;
+    const smokePrompt = args.includeSmokePrompt && args.deploymentName
+        ? await runSmokePrompt({
+            accountName: args.accountName,
+            resourceGroup: args.resourceGroup,
+            deploymentName: args.deploymentName,
+            prompt: args.smokePrompt ??
+                "Reply with one short sentence confirming this Microsoft Foundry deployment is ready for a live demo.",
+            maxTokens: 128,
+            temperature: 0
+        })
+        : undefined;
+    const euAiAct = checkEuAiAct({
+        systemName: args.systemName,
+        useCase: args.useCase,
+        euUsersOrMarket: args.euUsersOrMarket ?? true,
+        interactsWithPeople: args.interactsWithPeople ?? true,
+        generatesOrAltersContent: args.generatesOrAltersContent ?? true,
+        biometricUse: args.biometricUse ?? false,
+        employmentEducationCreditHealthLawMigrationJusticeUse: args.employmentEducationCreditHealthLawMigrationJusticeUse ?? false,
+        manipulativeOrExploitativeRisk: args.manipulativeOrExploitativeRisk ?? false,
+        providerOfGpaiModel: args.providerOfGpaiModel ?? false,
+        usesThirdPartyGpaiModel: args.usesThirdPartyGpaiModel ?? true
+    });
+    const checks = [
+        { id: "azure-account", title: "Azure account and tenant", status: summarizeOk(account) },
+        { id: "foundry-resource", title: "Foundry resource details", status: summarizeOk(foundryResource) },
+        { id: "model-deployments", title: "Model deployment inventory", status: summarizeOk(modelDeployments) },
+        { id: "quota", title: "Regional quota and usage", status: summarizeOk(quota) },
+        { id: "network", title: "Network posture", status: summarizeOk(networkPosture) },
+        { id: "private-endpoints", title: "Private endpoints", status: summarizeOk(privateEndpoints) },
+        { id: "rbac", title: "Role assignments", status: summarizeOk(roleAssignments) },
+        { id: "container-app", title: "Hosted MCP container app", status: containerApp ? summarizeOk(containerApp) : "not-run" },
+        { id: "app-insights", title: "Application Insights components", status: summarizeOk(appInsightsComponents) },
+        { id: "recent-traces", title: "Recent traces", status: recentTraces ? summarizeOk(recentTraces) : "not-run" },
+        { id: "smoke-prompt", title: "Live model smoke prompt", status: smokePrompt ? summarizeOk(smokePrompt) : "not-run" },
+        { id: "eu-ai-act", title: "EU AI Act readiness screen", status: euAiAct.status }
+    ];
+    const markdown = [
+        `# ${args.systemName} Release Evidence Pack`,
+        "",
+        `Generated: ${generatedAt}`,
+        `Use case: ${args.useCase}`,
+        `Resource group: ${args.resourceGroup}`,
+        `Foundry account: ${args.accountName}`,
+        `Location: ${args.location}`,
+        "",
+        markdownSection("Executive Status", checks.map((check) => `- ${check.title}: ${check.status}`)),
+        markdownSection("Live Evidence", [
+            `- Azure account check: ${summarizeOk(account)}`,
+            `- Foundry resource check: ${summarizeOk(foundryResource)}`,
+            `- Deployment inventory check: ${summarizeOk(modelDeployments)}`,
+            `- Quota check: ${summarizeOk(quota)}`,
+            `- Network posture check: ${summarizeOk(networkPosture)}`,
+            `- RBAC export check: ${summarizeOk(roleAssignments)}`,
+            `- Smoke prompt check: ${smokePrompt ? summarizeOk(smokePrompt) : "not requested"}`
+        ]),
+        markdownSection("EU AI Act Evidence", euAiAct.findings.map((finding) => `- ${finding.severity}: ${finding.title} - ${finding.nextAction}`)),
+        markdownSection("Showcase Script", [
+            "1. Start with the active tenant and subscription.",
+            "2. Show the Foundry resource, deployments, and quota.",
+            "3. Show network posture, private endpoints, and RBAC evidence.",
+            "4. Run or show the smoke prompt result.",
+            "5. Close with the EU AI Act findings and remaining release evidence."
+        ]),
+        markdownSection("Recommended Next Actions", [
+            "1. Save this pack with the release record.",
+            "2. Add production eval results when available.",
+            "3. Attach screenshots or exported logs for any manual review.",
+            "4. Ask legal and security owners to sign off on the EU AI Act and network findings."
+        ])
+    ].join("\n");
+    return {
+        status: checks.some((check) => check.status === "failed" || check.status === "fail") ? "review" : "ready-for-review",
+        generatedAt,
+        checks,
+        markdown,
+        evidence: {
+            account,
+            foundryResource,
+            modelDeployments,
+            quota,
+            networkPosture,
+            privateEndpoints,
+            roleAssignments,
+            containerApp,
+            appInsightsComponents,
+            recentTraces,
+            smokePrompt,
+            euAiAct
+        }
     };
 }
