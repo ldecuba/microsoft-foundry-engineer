@@ -2,6 +2,16 @@ import { runAzJson } from "../services/azureCli.js";
 export async function getAzureAccount() {
     return runAzJson(["account", "show", "--query", "{tenantId:tenantId,subscriptionId:id,name:name,user:user.name}"]);
 }
+export async function getCognitiveServicesAccessToken() {
+    return runAzJson([
+        "account",
+        "get-access-token",
+        "--resource",
+        "https://cognitiveservices.azure.com/",
+        "--query",
+        "{accessToken:accessToken,expiresOn:expiresOn,expires_on:expires_on,subscription:subscription,tenant:tenant,tokenType:tokenType}"
+    ]);
+}
 export async function listFoundryResources(args) {
     const query = "[].{name:name,resourceGroup:resourceGroup,location:location,kind:kind,sku:sku.name,endpoint:properties.endpoint,customSubDomainName:properties.customSubDomainName,publicNetworkAccess:properties.publicNetworkAccess}";
     const commandArgs = args.resourceGroup
@@ -21,6 +31,116 @@ export async function getFoundryResource(args) {
         "--query",
         "{name:name,resourceGroup:resourceGroup,location:location,kind:kind,sku:sku.name,endpoint:properties.endpoint,publicNetworkAccess:properties.publicNetworkAccess,networkAcls:properties.networkAcls,privateEndpointConnections:properties.privateEndpointConnections[].properties.privateLinkServiceConnectionState.status}"
     ]);
+}
+function normalizeEndpoint(endpoint) {
+    return endpoint.endsWith("/") ? endpoint.slice(0, -1) : endpoint;
+}
+function summarizeChatCompletion(data) {
+    const response = data;
+    return {
+        id: response.id,
+        model: response.model,
+        created: response.created,
+        message: response.choices?.[0]?.message,
+        finishReason: response.choices?.[0]?.finish_reason,
+        usage: response.usage,
+        promptFilterResults: response.prompt_filter_results,
+        contentFilterResults: response.choices?.[0]?.content_filter_results
+    };
+}
+export async function runSmokePrompt(args) {
+    const startedAt = new Date();
+    const timeoutMs = args.timeoutMs ?? 60000;
+    let endpoint = args.endpoint;
+    let resourceLookup;
+    if (!endpoint && args.accountName && args.resourceGroup) {
+        resourceLookup = await getFoundryResource({
+            name: args.accountName,
+            resourceGroup: args.resourceGroup
+        });
+        endpoint = resourceLookup.data?.endpoint;
+    }
+    if (!endpoint) {
+        return {
+            ok: false,
+            status: "failed",
+            error: "Provide endpoint, or provide accountName and resourceGroup so the endpoint can be resolved.",
+            resourceLookup
+        };
+    }
+    let bearerToken;
+    let token;
+    if (!args.apiKey) {
+        token = await getCognitiveServicesAccessToken();
+        if (!token.ok || !token.data?.accessToken) {
+            return {
+                ok: false,
+                status: "failed",
+                error: "Could not get an Entra token for Cognitive Services.",
+                token
+            };
+        }
+        bearerToken = token.data.accessToken;
+    }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    const url = `${normalizeEndpoint(endpoint)}/openai/deployments/${encodeURIComponent(args.deploymentName)}/chat/completions?api-version=${encodeURIComponent(args.apiVersion ?? "2024-10-21")}`;
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...(args.apiKey
+                    ? { "api-key": args.apiKey }
+                    : { Authorization: `Bearer ${bearerToken}` })
+            },
+            body: JSON.stringify({
+                messages: [
+                    {
+                        role: "system",
+                        content: args.systemPrompt ?? "You are a concise Microsoft Foundry smoke-test assistant."
+                    },
+                    {
+                        role: "user",
+                        content: args.prompt
+                    }
+                ],
+                max_tokens: args.maxTokens ?? 128,
+                temperature: args.temperature ?? 0
+            }),
+            signal: controller.signal
+        });
+        const text = await response.text();
+        const elapsedMs = Date.now() - startedAt.getTime();
+        const parsed = text ? JSON.parse(text) : undefined;
+        return {
+            ok: response.ok,
+            status: response.ok ? "passed" : "failed",
+            httpStatus: response.status,
+            elapsedMs,
+            endpoint: normalizeEndpoint(endpoint),
+            deploymentName: args.deploymentName,
+            apiVersion: args.apiVersion ?? "2024-10-21",
+            authenticatedWith: args.apiKey ? "api-key" : "entra-id",
+            startedAt: startedAt.toISOString(),
+            completedAt: new Date().toISOString(),
+            resourceLookup,
+            result: response.ok ? summarizeChatCompletion(parsed) : parsed
+        };
+    }
+    catch (error) {
+        return {
+            ok: false,
+            status: "failed",
+            elapsedMs: Date.now() - startedAt.getTime(),
+            endpoint: normalizeEndpoint(endpoint),
+            deploymentName: args.deploymentName,
+            error: error instanceof Error ? error.message : String(error)
+        };
+    }
+    finally {
+        clearTimeout(timeout);
+    }
 }
 export async function listModelDeployments(args) {
     return runAzJson([

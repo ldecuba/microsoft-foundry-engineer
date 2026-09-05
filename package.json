@@ -13,6 +13,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "doctor": "node scripts/foundry-doctor.mjs",
     "doctor:live": "node scripts/live-doctor.mjs",
+    "smoke:prompt": "node scripts/smoke-prompt.mjs",
     "validate:eu-ai-act": "node scripts/eu-ai-act-check.mjs",
     "smoke": "node scripts/smoke.mjs"
   },

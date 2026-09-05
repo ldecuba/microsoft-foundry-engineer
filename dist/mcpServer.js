@@ -7,7 +7,7 @@ import { checkEnvironment } from "./tools/environment.js";
 import { checkRbac } from "./tools/rbac.js";
 import { checkEuAiAct } from "./tools/euAiAct.js";
 import { buildGoLiveReport, runDoctor } from "./tools/reports.js";
-import { getAzureAccount, checkNetworkPosture, getContainerAppStatus, getFoundryResource, listAppInsightsComponents, listCognitiveServicesUsage, listFoundryResources, listModelDeployments, listPrivateEndpoints, listRoleAssignments, queryAppInsightsTraces, runLiveDoctor } from "./tools/liveAzure.js";
+import { getAzureAccount, checkNetworkPosture, getContainerAppStatus, getFoundryResource, listAppInsightsComponents, listCognitiveServicesUsage, listFoundryResources, listModelDeployments, listPrivateEndpoints, listRoleAssignments, queryAppInsightsTraces, runSmokePrompt, runLiveDoctor } from "./tools/liveAzure.js";
 function jsonText(value) {
     return {
         content: [
@@ -124,6 +124,19 @@ export function createFoundryEngineerMcpServer() {
         offset: z.string().default("1h"),
         query: z.string().optional()
     }, async (args) => jsonText(await queryAppInsightsTraces(args)));
+    server.tool("foundry_live_run_smoke_prompt", "Send one live smoke-test prompt to an Azure OpenAI deployment in Microsoft Foundry and return latency, usage, finish reason, and filter results.", {
+        endpoint: z.string().url().optional(),
+        accountName: z.string().optional(),
+        resourceGroup: z.string().optional(),
+        deploymentName: z.string(),
+        prompt: z.string().default("Reply with one short sentence confirming this Foundry deployment is responding."),
+        systemPrompt: z.string().optional(),
+        apiVersion: z.string().default("2024-10-21"),
+        maxTokens: z.number().int().positive().max(1000).default(128),
+        temperature: z.number().min(0).max(2).default(0),
+        timeoutMs: z.number().int().positive().max(120000).default(60000),
+        apiKey: z.string().optional()
+    }, async (args) => jsonText(await runSmokePrompt(args)));
     server.tool("foundry_live_doctor", "Run a read-only live Azure CLI readiness pass for Foundry resources and the hosted MCP.", {
         resourceGroup: z.string().optional(),
         accountName: z.string().optional(),

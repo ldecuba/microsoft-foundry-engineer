@@ -22,6 +22,7 @@ The first live slice is read-only. It uses the Azure CLI context of the machine 
 - `foundry_live_get_container_app_status`
 - `foundry_live_list_app_insights`
 - `foundry_live_query_app_insights_traces`
+- `foundry_live_run_smoke_prompt`
 - `foundry_live_doctor`
 
 ## Example Prompts
@@ -62,12 +63,22 @@ List Application Insights components in rg-aifoundry-dev.
 Query recent App Insights traces for app <app-insights-name> in rg-aifoundry-dev over the last 1h.
 ```
 
+```text
+Run a smoke prompt against deployment gpt-4o on account ais-aifoundry-dev in rg-aifoundry-dev.
+```
+
 ## Local Script Test
 
 After building, you can test the same read-only path outside an MCP client:
 
 ```bash
 npm run doctor:live
+```
+
+Run one live model smoke prompt:
+
+```bash
+npm run smoke:prompt -- rg-aifoundry-dev ais-aifoundry-dev gpt-4o
 ```
 
 Optional arguments:
@@ -81,3 +92,13 @@ npm run doctor:live -- <resource-group> <foundry-account-name> <container-app-na
 These tools do not create, update, or delete Azure resources. They only inspect current state.
 
 Live mutation tools should be added separately with explicit approval gates.
+
+`foundry_live_run_smoke_prompt` is the exception to pure inspection: it sends one prompt to a selected model deployment and returns the response, latency, token usage, finish reason, and content-filter results. It authenticates with Entra ID by default using an Azure CLI token for `https://cognitiveservices.azure.com/`. You can also pass an API key explicitly.
+
+The smoke prompt uses the Azure OpenAI chat completions route:
+
+```text
+POST {endpoint}/openai/deployments/{deploymentName}/chat/completions?api-version=2024-10-21
+```
+
+Reference: https://learn.microsoft.com/rest/api/microsoft-foundry/azureopenai/chat

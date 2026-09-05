@@ -11,6 +11,7 @@ const requiredFiles = [
   "src/tools/euAiAct.ts",
   "src/tools/liveAzure.ts",
   "scripts/live-doctor.mjs",
+  "scripts/smoke-prompt.mjs",
   "Dockerfile",
   "infra/container-app.bicep",
   "docs/hosting-azure-container-apps.md",
